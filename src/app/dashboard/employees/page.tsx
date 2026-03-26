@@ -65,10 +65,10 @@ const employeeSchema = z.object({
   phone: z.string().optional(),
   emergency_contact_name: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
-  profile_picture: z.string().optional(),
+  profile_picture: z.any().optional(),
 });
 
-type EmployeeFormValues = z.infer<typeof employeeSchema> & { profile_picture?: File | string };
+type EmployeeFormValues = z.infer<typeof employeeSchema>;
 
 export default function EmployeesPage() {
   const router = useRouter();
@@ -82,6 +82,8 @@ export default function EmployeesPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [ngoSettings, setNgoSettings] = useState<any>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [printingEmployee, setPrintingEmployee] = useState<any>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
@@ -208,90 +210,137 @@ export default function EmployeesPage() {
       router.push('/dashboard/ngo-settings');
       return;
     }
+    setPrintingEmployee(employee);
+    setIsPreviewOpen(true);
+   };
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const html = `
-      <html>
-        <head>
-          <title>ID Card - ${employee.first_name}</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-            body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
-            .id-card { width: 320px; height: 500px; background: white; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; position: relative; border: 1px solid #e1e4e8; }
-            .header { background: #2563eb; color: white; padding: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-            .ngo-logo { width: 40px; height: 40px; object-fit: contain; margin-bottom: 5px; }
-            .ngo-name { font-size: 18px; font-weight: 700; margin: 0; text-transform: uppercase; }
-            .ngo-address { font-size: 10px; margin: 0; opacity: 0.9; }
-            .photo-area { display: flex; justify-content: center; margin-top: -40px; }
-            .photo { width: 100px; height: 100px; background: #ddd; border-radius: 50%; border: 4px solid white; object-fit: cover; }
-            .details { padding: 20px; text-align: center; }
-            .emp-name { font-size: 20px; font-weight: 700; color: #1f2937; margin: 10px 0 5px; }
-            .emp-designation { font-size: 14px; color: #6b7280; margin: 0 0 20px; font-weight: 500; }
-            .info-grid { display: grid; grid-cols: 1; gap: 10px; text-align: left; background: #f9fafb; padding: 15px; border-radius: 10px; }
-            .info-item { display: flex; justify-content: space-between; font-size: 12px; }
-            .info-label { color: #6b7280; font-weight: 600; }
-            .info-value { color: #1f2937; font-weight: 700; }
-            .footer { position: absolute; bottom: 0; width: 100%; background: #f3f4f6; padding: 10px; text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
-            @media print {
-              body { background: white; }
-              .id-card { box-shadow: none; border: 1px solid #000; }
-            }
-          </style>
-        </head>
-        <body>
-           <div class="id-card">
-             <div class="header">
-               ${ngoSettings.ngo_logo ? `<img src="${ngoSettings.ngo_logo}" class="ngo-logo" />` : ''}
-               <p class="ngo-name">${ngoSettings.ngo_name}</p>
-               <p class="ngo-address">${ngoSettings.ngo_address}</p>
-             </div>
-            <div class="photo-area">
-              <img src="${employee.profile_picture || 'https://via.placeholder.com/150'}" class="photo" />
-            </div>
-            <div class="details">
-              <p class="emp-name">${employee.first_name} ${employee.last_name}</p>
-              <p class="emp-designation">${employee.designation?.name}</p>
-              <div class="info-grid">
-                <div class="info-item">
-                  <span class="info-label">Employee ID:</span>
-                  <span class="info-value">${employee.employee_id}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Department:</span>
-                  <span class="info-value">${employee.department?.name}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Blood Group:</span>
-                  <span class="info-value">${employee.blood_group || 'N/A'}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Phone:</span>
-                  <span class="info-value">${employee.phone || 'N/A'}</span>
-                </div>
-              </div>
-            </div>
-            <div class="footer">
-              Issued by ${ngoSettings.ngo_name} | Valid until Dec 2026
-            </div>
-          </div>
-          <script>
-            window.onload = () => {
-              window.print();
-              setTimeout(() => window.close(), 500);
-            };
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(html);
-    printWindow.document.close();
+   const handleActualPrint = () => {
+    window.print();
+    setIsPreviewOpen(false);
+    setPrintingEmployee(null);
    };
 
   return (
     <div className="space-y-6">
+      {/* Print Preview Dialog */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-md bg-gray-50/50 backdrop-blur-sm border-none shadow-2xl p-0 overflow-hidden">
+          <DialogHeader className="p-6 bg-white border-b sticky top-0 z-10">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Printer className="w-5 h-5 text-blue-600" />
+              ID Card Preview
+            </DialogTitle>
+            <DialogDescription>
+              Review the employee information before printing.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="p-8 flex justify-center bg-gray-100/50 min-h-[600px] items-center">
+            {printingEmployee && (
+              <div className="w-[320px] h-[500px] border border-gray-300 rounded-2xl overflow-hidden relative bg-white shadow-2xl transition-all duration-300 hover:scale-[1.02]">
+                <div className="bg-blue-600 p-6 text-center flex flex-col items-center gap-2">
+                  {ngoSettings.ngo_logo && (
+                    <img src={ngoSettings.ngo_logo} alt="NGO Logo" className="h-12 w-12 object-contain mb-1" />
+                  )}
+                  <h2 className="text-white text-lg font-bold uppercase leading-tight tracking-wide">{ngoSettings.ngo_name}</h2>
+                  <p className="text-white/80 text-[10px] leading-tight font-medium">{ngoSettings.ngo_address}</p>
+                </div>
+                <div className="flex justify-center -mt-10">
+                  <img 
+                    src={printingEmployee.profile_picture || 'https://via.placeholder.com/150'} 
+                    alt="Profile" 
+                    className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-xl"
+                  />
+                </div>
+                <div className="p-6 text-center space-y-1">
+                  <h3 className="text-xl font-bold text-gray-900 leading-tight">{printingEmployee.first_name} {printingEmployee.last_name}</h3>
+                  <p className="text-blue-600 text-sm font-semibold tracking-wide uppercase">{printingEmployee.designation?.name}</p>
+                  <div className="mt-8 bg-gray-50/80 p-5 rounded-2xl space-y-3 text-left border border-gray-100">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold uppercase tracking-tighter">Employee ID</span>
+                      <span className="text-gray-900 font-black">{printingEmployee.employee_id}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold uppercase tracking-tighter">Department</span>
+                      <span className="text-gray-900 font-black">{printingEmployee.department?.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold uppercase tracking-tighter">Blood Group</span>
+                      <span className="text-gray-900 font-black">{printingEmployee.blood_group || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold uppercase tracking-tighter">Phone</span>
+                      <span className="text-gray-900 font-black">{printingEmployee.phone || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute bottom-0 w-full bg-gray-50 py-3 text-center border-t border-gray-100">
+                  <p className="text-[9px] text-gray-400 font-bold tracking-widest uppercase">Issued by {ngoSettings.ngo_name} | Valid until Dec 2026</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="p-6 bg-white border-t flex justify-end gap-3 sticky bottom-0 z-10">
+            <Button variant="outline" onClick={() => setIsPreviewOpen(false)} className="px-6 font-semibold">
+              Cancel
+            </Button>
+            <Button onClick={handleActualPrint} className="bg-blue-600 hover:bg-blue-700 px-8 font-bold flex items-center gap-2 shadow-lg shadow-blue-200">
+              <Printer className="w-4 h-4" />
+              Print Now
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Print-only ID Card container (Hidden on screen) */}
+      {printingEmployee && (
+        <div className="fixed inset-0 z-[9999] bg-white print:block hidden overflow-visible print-only">
+          <div className="flex justify-center items-center h-screen bg-white">
+            <div className="w-[320px] h-[500px] border border-gray-300 rounded-2xl overflow-hidden relative bg-white">
+              <div className="bg-blue-600 p-6 text-center flex flex-col items-center gap-2">
+                {ngoSettings.ngo_logo && (
+                  <img src={ngoSettings.ngo_logo} alt="NGO Logo" className="h-12 w-12 object-contain mb-1" />
+                )}
+                <h2 className="text-white text-lg font-bold uppercase leading-tight">{ngoSettings.ngo_name}</h2>
+                <p className="text-white/80 text-[10px] leading-tight">{ngoSettings.ngo_address}</p>
+              </div>
+              <div className="flex justify-center -mt-10">
+                <img 
+                  src={printingEmployee.profile_picture || 'https://via.placeholder.com/150'} 
+                  alt="Profile" 
+                  className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-md"
+                />
+              </div>
+              <div className="p-6 text-center space-y-1">
+                <h3 className="text-xl font-bold text-gray-900">{printingEmployee.first_name} {printingEmployee.last_name}</h3>
+                <p className="text-gray-500 text-sm font-medium">{printingEmployee.designation?.name}</p>
+                <div className="mt-6 bg-gray-50 p-4 rounded-xl space-y-2 text-left">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500 font-semibold">Employee ID:</span>
+                    <span className="text-gray-900 font-bold">{printingEmployee.employee_id}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500 font-semibold">Department:</span>
+                    <span className="text-gray-900 font-bold">{printingEmployee.department?.name}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500 font-semibold">Blood Group:</span>
+                    <span className="text-gray-900 font-bold">{printingEmployee.blood_group || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500 font-semibold">Phone:</span>
+                    <span className="text-gray-900 font-bold">{printingEmployee.phone || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute bottom-0 w-full bg-gray-100 py-2 text-center border-t border-gray-200">
+                <p className="text-[10px] text-gray-400">Issued by {ngoSettings.ngo_name} | Valid until Dec 2026</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Employees</h1>
@@ -329,15 +378,15 @@ export default function EmployeesPage() {
               </Button>
             }
           />
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="sticky top-0 bg-white z-10 pb-4 border-b">
               <DialogTitle>{selectedEmployee ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
               <DialogDescription>
                 {selectedEmployee ? 'Update the details for this employee.' : 'Fill in the details below to register a new employee.'}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -638,7 +687,7 @@ export default function EmployeesPage() {
                     )}
                   />
                 </div>
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex justify-end gap-3 sticky bottom-0 bg-white z-10 py-4 border-t">
                   <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                     Cancel
                   </Button>

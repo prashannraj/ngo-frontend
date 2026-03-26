@@ -24,11 +24,12 @@ const ngoSchema = z.object({
   ngo_phone: z.string().optional(),
   ngo_email: z.string().email('Invalid email').optional().or(z.literal('')),
   ngo_website: z.string().url('Invalid URL').optional().or(z.literal('')),
+  ngo_logo: z.any().optional(),
   registration_number: z.string().optional(),
   pan_vat_number: z.string().optional(),
 });
 
-type NgoFormValues = z.infer<typeof ngoSchema> & { ngo_logo?: File | string };
+type NgoFormValues = z.infer<typeof ngoSchema>;
 
 export default function NgoSettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -43,6 +44,7 @@ export default function NgoSettingsPage() {
       ngo_phone: '',
       ngo_email: '',
       ngo_website: '',
+      ngo_logo: '',
       registration_number: '',
       pan_vat_number: '',
     },
@@ -60,6 +62,7 @@ export default function NgoSettingsPage() {
             ngo_phone: data.ngo_phone || '',
             ngo_email: data.ngo_email || '',
             ngo_website: data.ngo_website || '',
+            ngo_logo: data.ngo_logo || '',
             registration_number: data.registration_number || '',
             pan_vat_number: data.pan_vat_number || '',
           };
@@ -74,7 +77,7 @@ export default function NgoSettingsPage() {
     };
 
     fetchSettings();
-  }, [form]);
+  }, []);
 
   const onSubmit = async (values: NgoFormValues) => {
     setSubmitting(true);
@@ -91,9 +94,26 @@ export default function NgoSettingsPage() {
         }
       });
 
-      await api.post('/ngo-settings', formData, {
+      const response = await api.post('/ngo-settings', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      
+      if (response.data.data) {
+        const data = response.data.data;
+        const sanitizedData = {
+            ngo_name: data.ngo_name || '',
+            ngo_address: data.ngo_address || '',
+            ngo_phone: data.ngo_phone || '',
+            ngo_email: data.ngo_email || '',
+            ngo_website: data.ngo_website || '',
+            ngo_logo: data.ngo_logo || '',
+            registration_number: data.registration_number || '',
+            pan_vat_number: data.pan_vat_number || '',
+          };
+          form.reset(sanitizedData);
+          if (data.ngo_logo) setLogoPreview(data.ngo_logo);
+      }
+      
       toast.success('NGO settings updated successfully');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update settings');

@@ -83,7 +83,7 @@ export default function DashboardLayout({
         <ScrollArea className="flex-1 px-4">
           <nav className="space-y-2">
             {sidebarItems.map((item) => (
-              <Link key={item.name} href={item.href}>
+              <Link key={item.name} href={item.href} prefetch={false}>
                 <span className={`flex items-center p-3 rounded-lg transition-colors ${
                   pathname === item.href 
                     ? 'bg-primary text-white' 
