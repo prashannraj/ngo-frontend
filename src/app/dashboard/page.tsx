@@ -14,18 +14,15 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    // Fetch dashboard stats (mocking for now, but would be an API call)
     const fetchStats = async () => {
       try {
-        // const response = await api.get('/dashboard/stats');
-        // setStats(response.data.data);
-        
-        // Mock stats
+        const response = await api.get('/dashboard/stats');
+        const data = response.data.data;
         setStats({
-          employees: 12,
-          projects: 5,
-          leaves: 3,
-          attendance: 8,
+          employees: data.employees ?? 0,
+          projects: data.projects ?? 0,
+          leaves: data.pending_leaves ?? 0,
+          attendance: data.attendance_today ?? 0,
         });
       } catch (error) {
         console.error('Failed to fetch stats', error);

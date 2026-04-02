@@ -30,6 +30,11 @@ const sidebarItems = [
   { name: 'Assets', icon: Package, href: '/dashboard/assets' },
   { name: 'Fleet', icon: Car, href: '/dashboard/fleet' },
   { name: 'Attendance', icon: Clock, href: '/dashboard/attendance' },
+  { name: 'WFH', icon: Calendar, href: '/dashboard/wfh' },
+  { name: 'Timesheets', icon: Briefcase, href: '/dashboard/timesheets' },
+  { name: 'Appraisals', icon: FileText, href: '/dashboard/appraisals' },
+  { name: 'Travel', icon: Car, href: '/dashboard/travel' },
+  { name: 'Notifications', icon: FileText, href: '/dashboard/notifications' },
   { name: 'NGO Settings', icon: Settings, href: '/dashboard/ngo-settings' },
   { name: 'Reports', icon: FileText, href: '/dashboard/reports' },
 ];

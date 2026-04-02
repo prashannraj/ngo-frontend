@@ -56,6 +56,7 @@ const employeeSchema = z.object({
   employee_id: z.string().min(1, 'Employee ID is required'),
   department_id: z.string().min(1, 'Department is required'),
   designation_id: z.string().min(1, 'Designation is required'),
+  manager_id: z.string().optional(),
   join_date: z.string().min(1, 'Join date is required'),
   status: z.string().min(1, 'Status is required'),
   gender: z.string().optional(),
@@ -94,6 +95,7 @@ export default function EmployeesPage() {
       employee_id: '',
       department_id: '',
       designation_id: '',
+      manager_id: '',
       join_date: new Date().toISOString().split('T')[0],
       status: 'active',
       gender: '',
@@ -111,7 +113,7 @@ export default function EmployeesPage() {
     setLoading(true);
     try {
       const [empRes, depRes, desRes, ngoRes] = await Promise.all([
-        api.get(`/employees?search=${search}`),
+        api.get(`/employees?search=${search}&per_page=200`),
         api.get('/departments'),
         api.get('/designations'),
         api.get('/ngo-settings'),
@@ -141,6 +143,9 @@ export default function EmployeesPage() {
           if (value instanceof File) {
             formData.append(key, value);
           }
+        } else if (key === 'manager_id' && (!value || String(value).trim() === '')) {
+          // Do not send empty manager_id; backend expects null/valid id.
+          return;
         } else {
           formData.append(key, value || '');
         }
@@ -179,6 +184,7 @@ export default function EmployeesPage() {
       employee_id: employee.employee_id || '',
       department_id: (employee.department_id || '').toString(),
       designation_id: (employee.designation_id || '').toString(),
+      manager_id: (employee.manager_id || '').toString(),
       join_date: employee.join_date || '',
       status: employee.status || 'active',
       gender: employee.gender || '',
@@ -358,6 +364,7 @@ export default function EmployeesPage() {
                employee_id: '',
                department_id: '',
                designation_id: '',
+               manager_id: '',
                join_date: new Date().toISOString().split('T')[0],
                status: 'active',
                gender: '',
@@ -493,6 +500,37 @@ export default function EmployeesPage() {
                               ))
                             ) : (
                               <SelectItem value="none" disabled>No designations found</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="manager_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Manager (optional)</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ''}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select manager (optional)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="">No manager</SelectItem>
+                            {employees.length > 0 ? (
+                              employees
+                                .filter((m: any) => String(m.id) !== String(selectedEmployee?.id ?? ''))
+                                .map((m: any) => (
+                                  <SelectItem key={m.id} value={m.id.toString()}>
+                                    {m.first_name} {m.last_name}
+                                  </SelectItem>
+                                ))
+                            ) : (
+                              <SelectItem value="none" disabled>No employees found</SelectItem>
                             )}
                           </SelectContent>
                         </Select>
