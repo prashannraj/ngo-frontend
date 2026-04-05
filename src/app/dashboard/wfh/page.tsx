@@ -47,7 +47,7 @@ import { CalendarDays, Check, Plus, X } from 'lucide-react';
 const wfhSchema = z.object({
   task_id: z.string().optional(),
   work_date: z.string().min(1, 'Work date is required'),
-  days: z.coerce.number().min(0.5, 'Days must be at least 0.5'),
+  days: z.string().min(1, 'Days is required'),
   reason: z.string().min(5, 'Reason must be at least 5 characters'),
 });
 
@@ -72,9 +72,9 @@ export default function WfhPage() {
   const form = useForm<WfhFormValues>({
     resolver: zodResolver(wfhSchema),
     defaultValues: {
-      task_id: undefined,
+      task_id: '',
       work_date: new Date().toISOString().slice(0, 10),
-      days: 1,
+      days: '1',
       reason: '',
     },
   });
@@ -109,12 +109,12 @@ export default function WfhPage() {
       await api.post('/wfh-requests', {
         task_id: values.task_id ? Number(values.task_id) : null,
         work_date: values.work_date,
-        days: values.days,
+        days: Number(values.days),
         reason: values.reason,
       });
       toast.success('WFH request submitted');
       setOpenApply(false);
-      form.reset({ task_id: undefined, work_date: values.work_date, days: 1, reason: '' });
+      form.reset({ task_id: '', work_date: values.work_date, days: '1', reason: '' });
       fetchAll();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to submit WFH request');

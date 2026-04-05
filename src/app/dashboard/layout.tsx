@@ -19,7 +19,8 @@ import {
   X,
   ChevronRight,
   Bell,
-  Globe
+  Globe,
+  Banknote
 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -37,6 +38,7 @@ import {
 const sidebarItems = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
   { name: 'Employees', icon: Users, href: '/dashboard/employees' },
+  { name: 'Payroll', icon: Banknote, href: '/dashboard/payroll' },
   { name: 'Leaves', icon: Calendar, href: '/dashboard/leaves' },
   { name: 'Projects', icon: Briefcase, href: '/dashboard/projects' },
   { name: 'Assets', icon: Package, href: '/dashboard/assets' },

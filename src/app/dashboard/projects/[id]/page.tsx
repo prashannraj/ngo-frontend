@@ -42,17 +42,17 @@ import { formatDate } from '@/lib/utils';
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  assigned_to: z.coerce.number().optional(),
+  assigned_to: z.string().optional(),
   due_date: z.string().optional(),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
-  status: z.enum(['todo', 'ongoing', 'completed', 'on_hold', 'cancelled']).default('todo'),
-  progress: z.coerce.number().min(0).max(100).optional(),
-  parent_id: z.coerce.number().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']),
+  status: z.enum(['todo', 'ongoing', 'completed', 'on_hold', 'cancelled']),
+  progress: z.string().optional(),
+  parent_id: z.string().optional(),
 });
 
 const logSchema = z.object({
   date: z.string().min(1, 'Date is required'),
-  hours_worked: z.coerce.number().min(0, 'Hours must be >= 0'),
+  hours_worked: z.string().min(1, 'Hours worked is required'),
   description: z.string().optional(),
 });
 
@@ -82,12 +82,12 @@ export default function ProjectDetailPage() {
     defaultValues: {
       title: '',
       description: '',
-      assigned_to: undefined,
+      assigned_to: '',
       due_date: '',
       priority: 'medium',
       status: 'todo',
-      progress: 0,
-      parent_id: undefined,
+      progress: '0',
+      parent_id: '',
     },
   });
 
@@ -95,7 +95,7 @@ export default function ProjectDetailPage() {
     resolver: zodResolver(logSchema),
     defaultValues: {
       date: new Date().toISOString().slice(0, 10),
-      hours_worked: 1,
+      hours_worked: '1',
       description: '',
     },
   });
@@ -153,14 +153,14 @@ export default function ProjectDetailPage() {
     try {
       await api.post('/tasks', {
         project_id: projectId,
-        parent_id: values.parent_id ?? null,
+        parent_id: values.parent_id ? Number(values.parent_id) : null,
         title: values.title,
         description: values.description || '',
         assigned_to: values.assigned_to ? Number(values.assigned_to) : null,
         due_date: values.due_date || null,
         priority: values.priority,
         status: values.status,
-        progress: values.progress ?? 0,
+        progress: values.progress ? Number(values.progress) : 0,
       });
       toast.success('Task created');
       setCreateOpen(false);
@@ -183,7 +183,7 @@ export default function ProjectDetailPage() {
 
   const openLogForTask = (task: any) => {
     setLogTask(task);
-    logForm.reset({ date: new Date().toISOString().slice(0, 10), hours_worked: 1, description: '' });
+    logForm.reset({ date: new Date().toISOString().slice(0, 10), hours_worked: '1', description: '' });
     setOpenLog(true);
   };
 
@@ -193,7 +193,7 @@ export default function ProjectDetailPage() {
       await api.post('/timesheets', {
         task_id: logTask.id,
         date: values.date,
-        hours_worked: values.hours_worked,
+        hours_worked: Number(values.hours_worked),
         description: values.description || '',
         status: 'submitted',
       });
@@ -395,21 +395,21 @@ export default function ProjectDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assign To (optional)</FormLabel>
-                      <FormControl>
-                        <Select value={field.value ? String(field.value) : ''} onValueChange={(v) => field.onChange(Number(v))}>
+                      <Select value={field.value || ''} onValueChange={field.onChange}>
+                        <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Unassigned" />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">Unassigned</SelectItem>
-                            {employees.map((e: any) => (
-                              <SelectItem key={e.id} value={String(e.id)}>
-                                {e.first_name} {e.last_name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="0">Unassigned</SelectItem>
+                          {employees.map((e: any) => (
+                            <SelectItem key={e.id} value={String(e.id)}>
+                              {e.first_name} {e.last_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -437,19 +437,19 @@ export default function ProjectDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Priority</FormLabel>
-                      <FormControl>
-                        <Select value={field.value} onValueChange={field.onChange}>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="urgent">Urgent</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -461,20 +461,20 @@ export default function ProjectDetailPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <FormControl>
-                        <Select value={field.value} onValueChange={field.onChange}>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="todo">Todo</SelectItem>
-                            <SelectItem value="ongoing">Ongoing</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="on_hold">On Hold</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="todo">Todo</SelectItem>
+                          <SelectItem value="ongoing">Ongoing</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="on_hold">On Hold</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -501,21 +501,21 @@ export default function ProjectDetailPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Subtask of (optional)</FormLabel>
-                    <FormControl>
-                      <Select value={field.value ? String(field.value) : ''} onValueChange={(v) => field.onChange(v ? Number(v) : undefined)}>
+                    <Select value={field.value || ''} onValueChange={field.onChange}>
+                      <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="No parent" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">No parent</SelectItem>
-                          {tasks.map((t: any) => (
-                            <SelectItem key={t.id} value={String(t.id)}>
-                              {t.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="0">No parent</SelectItem>
+                        {tasks.map((t: any) => (
+                          <SelectItem key={t.id} value={String(t.id)}>
+                            {t.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

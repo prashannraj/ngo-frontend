@@ -91,17 +91,17 @@ export default function LeavesPage() {
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const requestForm = useForm({
+  const requestForm = useForm<z.infer<typeof leaveRequestSchema>>({
     resolver: zodResolver(leaveRequestSchema),
     defaultValues: { leave_type_id: '', start_date: '', end_date: '', reason: '' }
   });
 
-  const inLieuForm = useForm({
+  const inLieuForm = useForm<z.infer<typeof inLieuSchema>>({
     resolver: zodResolver(inLieuSchema),
     defaultValues: { work_date: '', days: '1', reason: '' }
   });
 
-  const typeForm = useForm({
+  const typeForm = useForm<z.infer<typeof leaveTypeSchema>>({
     resolver: zodResolver(leaveTypeSchema),
     defaultValues: { name: '', allowance: '0', color: '#2563eb' }
   });
@@ -122,7 +122,7 @@ export default function LeavesPage() {
       ]);
       setLeaves(leavesRes.data.data.data);
       setInLieuLeaves(inLieuRes.data.data.data);
-      setLeaveTypes(typesRes.data.data);
+      setLeaveTypes(typesRes?.data?.data || []);
     } catch (error) {
       toast.error('Failed to fetch data');
     } finally {
@@ -130,10 +130,13 @@ export default function LeavesPage() {
     }
   };
 
-  const handleRequestSubmit = async (values: any) => {
+  const handleRequestSubmit = async (values: z.infer<typeof leaveRequestSchema>) => {
     setSubmitting(true);
     try {
-      await api.post('/leaves', values);
+      await api.post('/leaves', {
+        ...values,
+        leave_type_id: Number(values.leave_type_id)
+      });
       toast.success('Leave request submitted');
       setIsRequestModalOpen(false);
       requestForm.reset();
@@ -145,10 +148,13 @@ export default function LeavesPage() {
     }
   };
 
-  const handleInLieuSubmit = async (values: any) => {
+  const handleInLieuSubmit = async (values: z.infer<typeof inLieuSchema>) => {
     setSubmitting(true);
     try {
-      await api.post('/in-lieu-leaves', values);
+      await api.post('/in-lieu-leaves', {
+        ...values,
+        days: Number(values.days)
+      });
       toast.success('In-lieu request submitted');
       setIsInLieuModalOpen(false);
       inLieuForm.reset();
@@ -160,10 +166,13 @@ export default function LeavesPage() {
     }
   };
 
-  const handleTypeSubmit = async (values: any) => {
+  const handleTypeSubmit = async (values: z.infer<typeof leaveTypeSchema>) => {
     setSubmitting(true);
     try {
-      await api.post('/leave-types', values);
+      await api.post('/leave-types', {
+        ...values,
+        allowance: Number(values.allowance)
+      });
       toast.success('Leave type created');
       setIsTypeModalOpen(false);
       typeForm.reset();
@@ -361,7 +370,7 @@ export default function LeavesPage() {
               <FormField control={requestForm.control} name="leave_type_id" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Leave Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ''}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
                     <SelectContent>
                       {leaveTypes.map((t: any) => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}

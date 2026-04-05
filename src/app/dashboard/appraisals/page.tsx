@@ -37,7 +37,7 @@ import * as z from 'zod';
 import { Check, Plus, X } from 'lucide-react';
 
 const createSchema = z.object({
-  employee_id: z.coerce.number().optional(),
+  employee_id: z.string().optional(),
   period: z.string().min(1, 'Period is required'),
   goals: z.string().optional(),
   status: z.string().optional(),
@@ -51,7 +51,7 @@ const reviewSchema = z.object({
 });
 
 const completeSchema = z.object({
-  final_score: z.coerce.number().min(0, 'Score must be >= 0'),
+  final_score: z.string().min(1, 'Score is required'),
   employee_comments: z.string().optional(),
 });
 
@@ -92,7 +92,7 @@ export default function AppraisalsPage() {
   const createForm = useForm<z.infer<typeof createSchema>>({
     resolver: zodResolver(createSchema),
     defaultValues: {
-      employee_id: undefined,
+      employee_id: '',
       period: '',
       goals: '',
       status: 'draft',
@@ -112,7 +112,7 @@ export default function AppraisalsPage() {
   const completeForm = useForm<z.infer<typeof completeSchema>>({
     resolver: zodResolver(completeSchema),
     defaultValues: {
-      final_score: 0,
+      final_score: '0',
       employee_comments: '',
     },
   });
@@ -197,13 +197,13 @@ export default function AppraisalsPage() {
     if (!activeAppraisalId) return;
     try {
       await api.post(`/appraisals/${activeAppraisalId}/complete`, {
-        final_score: values.final_score,
+        final_score: Number(values.final_score),
         employee_comments: values.employee_comments || undefined,
       });
       toast.success('Appraisal completed');
       setCompleteOpen(false);
       setActiveAppraisalId(null);
-      completeForm.reset({ final_score: 0, employee_comments: '' });
+      completeForm.reset({ final_score: '0', employee_comments: '' });
       fetchAll();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to complete');
