@@ -28,19 +28,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Check, Plus, Settings, X, Plane } from 'lucide-react';
+import { Check, Plus, Plane, X } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
 
 const travelSchema = z.object({
   destination: z.string().min(1, 'Destination is required'),
   purpose: z.string().min(5, 'Purpose must be at least 5 characters'),
   start_date: z.string().min(1, 'Start date is required'),
   end_date: z.string().min(1, 'End date is required'),
-  estimated_budget: z.coerce.number().min(0).optional(),
+  estimated_budget: z.number().min(0),
 });
 
 const settleSchema = z.object({
-  actual_expenditure: z.coerce.number().min(0, 'Actual expenditure must be 0 or more'),
+  actual_expenditure: z.number().min(0, 'Actual expenditure must be 0 or more'),
 });
+
+type TravelFormValues = z.infer<typeof travelSchema>;
+type SettleFormValues = z.infer<typeof settleSchema>;
 
 export default function TravelPage() {
   const [user, setUser] = useState<any>(null);
@@ -56,7 +60,7 @@ export default function TravelPage() {
     [user],
   );
 
-  const applyForm = useForm<z.infer<typeof travelSchema>>({
+  const applyForm = useForm<TravelFormValues>({
     resolver: zodResolver(travelSchema),
     defaultValues: {
       destination: '',
@@ -67,7 +71,7 @@ export default function TravelPage() {
     },
   });
 
-  const settleForm = useForm<z.infer<typeof settleSchema>>({
+  const settleForm = useForm<SettleFormValues>({
     resolver: zodResolver(settleSchema),
     defaultValues: { actual_expenditure: 0 },
   });
@@ -155,6 +159,49 @@ export default function TravelPage() {
     return 'secondary';
   };
 
+  const renderTravelRow = (r: any) => (
+    <TableRow key={r.id}>
+      <TableCell>{r.employee ? `${r.employee.first_name} ${r.employee.last_name}` : '-'}</TableCell>
+      <TableCell className="font-medium">{r.destination}</TableCell>
+      <TableCell className="text-sm">
+        {formatDate(r.start_date)} to {formatDate(r.end_date)}
+      </TableCell>
+      <TableCell className="text-sm">
+        {r.estimated_budget ?? 0} <span className="text-gray-500">/</span>{' '}
+        {r.actual_expenditure ?? '-'}
+      </TableCell>
+      <TableCell>
+        <Badge variant={statusVariant(r.status)}>{String(r.status).toUpperCase()}</Badge>
+      </TableCell>
+      <TableCell className="text-right">
+        {isApprover && r.status === 'pending' ? (
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleApprove(r.id)}>
+              <Check className="w-4 h-4" />
+            </Button>
+            <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleReject(r.id)}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : isApprover && r.status === 'approved' ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setSettling(r);
+              setOpenSettle(true);
+              settleForm.reset({ actual_expenditure: Number(r.actual_expenditure ?? 0) });
+            }}
+          >
+            Settle
+          </Button>
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -164,7 +211,7 @@ export default function TravelPage() {
         </div>
 
         <Button className="flex items-center gap-2" onClick={() => setOpenApply(true)}>
-          <Plane className="w-4 h-4" />
+          <Plus className="w-4 h-4" />
           Apply Travel
         </Button>
       </div>
@@ -172,7 +219,7 @@ export default function TravelPage() {
       <Card>
         <CardHeader className="flex items-center justify-between gap-4">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Settings className="w-4 h-4" />
+            <Plane className="w-4 h-4" />
             Travel Requests
           </CardTitle>
         </CardHeader>
@@ -202,48 +249,7 @@ export default function TravelPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                requests.map((r: any) => (
-                  <TableRow key={r.id}>
-                    <TableCell>{r.employee ? `${r.employee.first_name} ${r.employee.last_name}` : '-'}</TableCell>
-                    <TableCell className="font-medium">{r.destination}</TableCell>
-                    <TableCell className="text-sm">
-                      {r.start_date} to {r.end_date}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {r.estimated_budget ?? 0} <span className="text-gray-500">/</span>{' '}
-                      {r.actual_expenditure ?? '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(r.status)}>{String(r.status).toUpperCase()}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {isApprover && r.status === 'pending' ? (
-                        <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleApprove(r.id)}>
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleReject(r.id)}>
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : isApprover && r.status === 'approved' ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSettling(r);
-                            setOpenSettle(true);
-                            settleForm.reset({ actual_expenditure: Number(r.actual_expenditure ?? 0) });
-                          }}
-                        >
-                          Settle
-                        </Button>
-                      ) : (
-                        <span className="text-gray-400 text-xs">-</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
+                requests.map(renderTravelRow)
               )}
             </TableBody>
           </Table>

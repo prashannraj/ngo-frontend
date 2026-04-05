@@ -15,6 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Wrench, Trash2, RotateCcw } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
 
 export default function AssetsPage() {
   const [assets, setAssets] = useState<any[]>([]);
@@ -143,6 +144,42 @@ export default function AssetsPage() {
     return `${emp.first_name} ${emp.last_name}`;
   };
 
+  const renderAssetRow = (asset: any) => (
+    <TableRow key={asset.id}>
+      <TableCell className="font-mono">{asset.asset_tag}</TableCell>
+      <TableCell className="font-medium">{asset.name}</TableCell>
+      <TableCell>{asset.category}</TableCell>
+      <TableCell>
+        <Badge variant={asset.status === 'available' ? 'default' : 'secondary'}>
+          {String(asset.status).toUpperCase()}
+        </Badge>
+      </TableCell>
+      <TableCell>{formatAssignee(asset)}</TableCell>
+      <TableCell>{formatDate(asset?.active_assignment?.due_date)}</TableCell>
+      {isAssetAdmin && (
+        <TableCell className="text-right">
+          {asset.status === 'available' ? (
+            <Button size="sm" variant="outline" onClick={() => handleAssign(asset)}>
+              Assign
+            </Button>
+          ) : (
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => handleReturn(asset)} title="Return">
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleMaintenance(asset)} title="Maintenance">
+                <Wrench className="w-4 h-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleDispose(asset)} title="Dispose">
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+        </TableCell>
+      )}
+    </TableRow>
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -189,41 +226,7 @@ export default function AssetsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                assets.map((asset: any) => (
-                  <TableRow key={asset.id}>
-                    <TableCell className="font-mono">{asset.asset_tag}</TableCell>
-                    <TableCell className="font-medium">{asset.name}</TableCell>
-                    <TableCell>{asset.category}</TableCell>
-                    <TableCell>
-                      <Badge variant={asset.status === 'available' ? 'default' : 'secondary'}>
-                        {String(asset.status).toUpperCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatAssignee(asset)}</TableCell>
-                    <TableCell>{asset?.active_assignment?.due_date || '-'}</TableCell>
-                    {isAssetAdmin && (
-                      <TableCell className="text-right">
-                        {asset.status === 'available' ? (
-                          <Button size="sm" variant="outline" onClick={() => handleAssign(asset)}>
-                            Assign
-                          </Button>
-                        ) : (
-                          <div className="flex justify-end gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleReturn(asset)} title="Return">
-                              <RotateCcw className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleMaintenance(asset)} title="Maintenance">
-                              <Wrench className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => handleDispose(asset)} title="Dispose">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))
+                assets.map(renderAssetRow)
               )}
             </TableBody>
           </Table>

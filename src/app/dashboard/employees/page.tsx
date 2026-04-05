@@ -144,8 +144,7 @@ export default function EmployeesPage() {
             formData.append(key, value);
           }
         } else if (key === 'manager_id' && (!value || String(value).trim() === '')) {
-          // Do not send empty manager_id; backend expects null/valid id.
-          return;
+          formData.append(key, '');
         } else {
           formData.append(key, value || '');
         }
@@ -245,11 +244,11 @@ export default function EmployeesPage() {
             {printingEmployee && (
               <div className="w-[320px] h-[500px] border border-gray-300 rounded-2xl overflow-hidden relative bg-white shadow-2xl transition-all duration-300 hover:scale-[1.02]">
                 <div className="bg-blue-600 p-6 text-center flex flex-col items-center gap-2">
-                  {ngoSettings.ngo_logo && (
+                  {ngoSettings?.ngo_logo && (
                     <img src={ngoSettings.ngo_logo} alt="NGO Logo" className="h-12 w-12 object-contain mb-1" />
                   )}
-                  <h2 className="text-white text-lg font-bold uppercase leading-tight tracking-wide">{ngoSettings.ngo_name}</h2>
-                  <p className="text-white/80 text-[10px] leading-tight font-medium">{ngoSettings.ngo_address}</p>
+                  <h2 className="text-white text-lg font-bold uppercase leading-tight tracking-wide">{ngoSettings?.ngo_name || 'NGO Name'}</h2>
+                  <p className="text-white/80 text-[10px] leading-tight font-medium">{ngoSettings?.ngo_address || 'NGO Address'}</p>
                 </div>
                 <div className="flex justify-center -mt-10">
                   <img 
@@ -281,7 +280,7 @@ export default function EmployeesPage() {
                   </div>
                 </div>
                 <div className="absolute bottom-0 w-full bg-gray-50 py-3 text-center border-t border-gray-100">
-                  <p className="text-[9px] text-gray-400 font-bold tracking-widest uppercase">Issued by {ngoSettings.ngo_name} | Valid until Dec 2026</p>
+                  <p className="text-[9px] text-gray-400 font-bold tracking-widest uppercase">Issued by {ngoSettings?.ngo_name || 'NGO'} | Valid until Dec 2026</p>
                 </div>
               </div>
             )}
@@ -305,11 +304,11 @@ export default function EmployeesPage() {
           <div className="flex justify-center items-center h-screen bg-white">
             <div className="w-[320px] h-[500px] border border-gray-300 rounded-2xl overflow-hidden relative bg-white">
               <div className="bg-blue-600 p-6 text-center flex flex-col items-center gap-2">
-                {ngoSettings.ngo_logo && (
+                {ngoSettings?.ngo_logo && (
                   <img src={ngoSettings.ngo_logo} alt="NGO Logo" className="h-12 w-12 object-contain mb-1" />
                 )}
-                <h2 className="text-white text-lg font-bold uppercase leading-tight">{ngoSettings.ngo_name}</h2>
-                <p className="text-white/80 text-[10px] leading-tight">{ngoSettings.ngo_address}</p>
+                <h2 className="text-white text-lg font-bold uppercase leading-tight">{ngoSettings?.ngo_name || 'NGO Name'}</h2>
+                <p className="text-white/80 text-[10px] leading-tight">{ngoSettings?.ngo_address || 'NGO Address'}</p>
               </div>
               <div className="flex justify-center -mt-10">
                 <img 
@@ -341,7 +340,7 @@ export default function EmployeesPage() {
                 </div>
               </div>
               <div className="absolute bottom-0 w-full bg-gray-100 py-2 text-center border-t border-gray-200">
-                <p className="text-[10px] text-gray-400">Issued by {ngoSettings.ngo_name} | Valid until Dec 2026</p>
+                <p className="text-[10px] text-gray-400">Issued by {ngoSettings?.ngo_name || 'NGO'} | Valid until Dec 2026</p>
               </div>
             </div>
           </div>

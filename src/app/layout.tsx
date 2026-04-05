@@ -7,8 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/context/LanguageContext";
 
 export const metadata: Metadata = {
-  title: "NGO Office Automation System",
-  description: "Complete MIS + HRIS + PMS for NGOs",
+  title: "Appan HRM | Office Automation System",
+  description: "Next-Generation MIS + HRIS + PMS Ecosystem for NGOs",
 };
 
 export default function RootLayout({
@@ -20,8 +20,9 @@ export default function RootLayout({
     <html
       lang="en"
       className="h-full antialiased"
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <LanguageProvider>
           <TooltipProvider>
             {children}

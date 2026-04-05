@@ -38,12 +38,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Check, Plus, X } from 'lucide-react';
 
+import { formatDate } from '@/lib/utils';
+
 const entrySchema = z.object({
-  task_id: z.coerce.number().min(1, 'Task is required'),
+  task_id: z.number().min(1, 'Task is required'),
   date: z.string().min(1, 'Date is required'),
-  hours_worked: z.coerce.number().min(0, 'Hours must be 0 or more'),
+  hours_worked: z.number().min(0, 'Hours must be 0 or more'),
   description: z.string().optional(),
 });
+
+type EntryFormValues = z.infer<typeof entrySchema>;
 
 export default function TimesheetsPage() {
   const [user, setUser] = useState<any>(null);
@@ -75,10 +79,10 @@ export default function TimesheetsPage() {
   const [openLog, setOpenLog] = useState(false);
   const [logging, setLogging] = useState(false);
 
-  const entryForm = useForm<z.infer<typeof entrySchema>>({
+  const entryForm = useForm<EntryFormValues>({
     resolver: zodResolver(entrySchema),
     defaultValues: {
-      task_id: 0,
+      task_id: 1,
       date: new Date().toISOString().slice(0, 10),
       hours_worked: 1,
       description: '',
@@ -216,7 +220,7 @@ export default function TimesheetsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
             <div className="space-y-2">
               <div className="text-sm text-gray-600">Task</div>
-              <Select value={taskFilter} onValueChange={setTaskFilter}>
+              <Select value={taskFilter} onValueChange={(v) => v && setTaskFilter(v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All tasks" />
                 </SelectTrigger>
@@ -234,7 +238,7 @@ export default function TimesheetsPage() {
             {!isEmployee && (
               <div className="space-y-2">
                 <div className="text-sm text-gray-600">Employee</div>
-                <Select value={employeeFilter} onValueChange={setEmployeeFilter}>
+                <Select value={employeeFilter} onValueChange={(v) => v && setEmployeeFilter(v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Employee filter" />
                   </SelectTrigger>
@@ -252,8 +256,8 @@ export default function TimesheetsPage() {
           </div>
 
           <div className="text-sm text-gray-500">
-            Showing logs from <span className="font-mono">{range.start}</span> to{' '}
-            <span className="font-mono">{range.end}</span>.
+            Showing logs from <span className="font-mono">{formatDate(range.start)}</span> to{' '}
+            <span className="font-mono">{formatDate(range.end)}</span>.
           </div>
         </CardContent>
       </Card>
@@ -291,7 +295,7 @@ export default function TimesheetsPage() {
               ) : (
                 timesheets.map((t: any) => (
                   <TableRow key={t.id}>
-                    <TableCell className="font-mono">{t.date}</TableCell>
+                    <TableCell className="font-mono">{formatDate(t.date)}</TableCell>
                     <TableCell className="font-medium">{t.task?.title || '-'}</TableCell>
                     <TableCell>{t.task?.project?.name || '-'}</TableCell>
                     <TableCell>{t.hours_worked}</TableCell>

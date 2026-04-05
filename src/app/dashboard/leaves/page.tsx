@@ -59,6 +59,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatDate } from '@/lib/utils';
 
 const leaveRequestSchema = z.object({
   leave_type_id: z.string().min(1, 'Leave type is required'),
@@ -248,7 +249,9 @@ export default function LeavesPage() {
                           {leave.leave_type?.name}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm">{leave.start_date} to {leave.end_date}</TableCell>
+                      <TableCell className="text-sm font-semibold text-slate-600">
+                        {formatDate(leave.start_date)} to {formatDate(leave.end_date)}
+                      </TableCell>
                       <TableCell>{leave.days}</TableCell>
                       <TableCell>
                         <Badge variant={leave.status === 'approved' ? 'default' : leave.status === 'pending' ? 'secondary' : 'destructive'}>
@@ -303,7 +306,7 @@ export default function LeavesPage() {
                   inLieuLeaves.map((record: any) => (
                     <TableRow key={record.id}>
                       <TableCell className="font-bold">{record.employee?.first_name} {record.employee?.last_name}</TableCell>
-                      <TableCell>{record.work_date}</TableCell>
+                      <TableCell className="font-mono text-xs">{formatDate(record.work_date)}</TableCell>
                       <TableCell>{record.days}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{record.reason}</TableCell>
                       <TableCell>

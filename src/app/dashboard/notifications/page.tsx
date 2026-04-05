@@ -15,6 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { formatDateTime } from '@/lib/utils';
+
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,26 @@ export default function NotificationsPage() {
     }
   };
 
+  const renderNotificationRow = (n: any) => (
+    <TableRow key={n.id}>
+      <TableCell>
+        <Badge variant={n.read_at ? 'secondary' : 'default'}>
+          {n.read_at ? 'READ' : 'UNREAD'}
+        </Badge>
+      </TableCell>
+      <TableCell className="font-medium">{n.title || 'Notification'}</TableCell>
+      <TableCell className="max-w-[360px] truncate">{n.body || '-'}</TableCell>
+      <TableCell>{formatDateTime(n.created_at)}</TableCell>
+      <TableCell className="text-right">
+        {!n.read_at && (
+          <Button size="sm" variant="outline" onClick={() => handleMarkRead(n.id)}>
+            Mark read
+          </Button>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -96,25 +118,7 @@ export default function NotificationsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                notifications.map((n: any) => (
-                  <TableRow key={n.id}>
-                    <TableCell>
-                      <Badge variant={n.read_at ? 'secondary' : 'default'}>
-                        {n.read_at ? 'READ' : 'UNREAD'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{n.title || 'Notification'}</TableCell>
-                    <TableCell className="max-w-[360px] truncate">{n.body || '-'}</TableCell>
-                    <TableCell>{n.created_at ? new Date(n.created_at).toLocaleString() : '-'}</TableCell>
-                    <TableCell className="text-right">
-                      {!n.read_at && (
-                        <Button size="sm" variant="outline" onClick={() => handleMarkRead(n.id)}>
-                          Mark read
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
+                notifications.map(renderNotificationRow)
               )}
             </TableBody>
           </Table>

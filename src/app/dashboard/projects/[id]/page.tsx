@@ -37,6 +37,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Check, Plus, X } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
 
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required'),

@@ -51,6 +51,8 @@ const wfhSchema = z.object({
   reason: z.string().min(5, 'Reason must be at least 5 characters'),
 });
 
+import { formatDate } from '@/lib/utils';
+
 export default function WfhPage() {
   const [user, setUser] = useState<any>(null);
   const [requests, setRequests] = useState<any[]>([]);
@@ -65,7 +67,9 @@ export default function WfhPage() {
     [user],
   );
 
-  const form = useForm<z.infer<typeof wfhSchema>>({
+  type WfhFormValues = z.infer<typeof wfhSchema>;
+
+  const form = useForm<WfhFormValues>({
     resolver: zodResolver(wfhSchema),
     defaultValues: {
       task_id: undefined,
@@ -99,7 +103,7 @@ export default function WfhPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSubmit = async (values: z.infer<typeof wfhSchema>) => {
+  const handleSubmit = async (values: WfhFormValues) => {
     setSubmitting(true);
     try {
       await api.post('/wfh-requests', {
@@ -134,6 +138,55 @@ export default function WfhPage() {
     if (tab === 'approved') return requests.filter((r: any) => r.status === 'approved');
     return requests;
   }, [requests, tab]);
+
+  const renderWfhRow = (r: any) => (
+    <TableRow key={r.id}>
+      <TableCell>
+        {r.employee ? `${r.employee.first_name} ${r.employee.last_name}` : '-'}
+      </TableCell>
+      <TableCell>{formatDate(r.work_date)}</TableCell>
+      <TableCell>{r.days}</TableCell>
+      <TableCell>{r.task ? r.task.title : '-'}</TableCell>
+      <TableCell className="max-w-[280px] truncate">{r.reason}</TableCell>
+      <TableCell>
+        <Badge
+          variant={
+            r.status === 'approved'
+              ? 'default'
+              : r.status === 'pending'
+                ? 'secondary'
+                : 'destructive'
+          }
+        >
+          {String(r.status).toUpperCase()}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-right">
+        {isAdminLike && r.status === 'pending' ? (
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-green-600 border-green-200 hover:bg-green-50"
+              onClick={() => handleAction(r.id, 'approve')}
+            >
+              <Check className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-600 border-red-200 hover:bg-red-50"
+              onClick={() => handleAction(r.id, 'reject')}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : (
+          <span className="text-gray-400 text-xs">-</span>
+        )}
+      </TableCell>
+    </TableRow>
+  );
 
   return (
     <div className="space-y-6">
@@ -191,54 +244,7 @@ export default function WfhPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                visibleRequests.map((r: any) => (
-                  <TableRow key={r.id}>
-                    <TableCell>
-                      {r.employee ? `${r.employee.first_name} ${r.employee.last_name}` : '-'}
-                    </TableCell>
-                    <TableCell className="font-mono">{r.work_date}</TableCell>
-                    <TableCell>{r.days}</TableCell>
-                    <TableCell>{r.task ? r.task.title : '-'}</TableCell>
-                    <TableCell className="max-w-[280px] truncate">{r.reason}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          r.status === 'approved'
-                            ? 'default'
-                            : r.status === 'pending'
-                              ? 'secondary'
-                              : 'destructive'
-                        }
-                      >
-                        {String(r.status).toUpperCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {isAdminLike && r.status === 'pending' ? (
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-green-600 border-green-200 hover:bg-green-50"
-                            onClick={() => handleAction(r.id, 'approve')}
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-red-600 border-red-200 hover:bg-red-50"
-                            onClick={() => handleAction(r.id, 'reject')}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-xs">-</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
+                visibleRequests.map(renderWfhRow)
               )}
             </TableBody>
           </Table>

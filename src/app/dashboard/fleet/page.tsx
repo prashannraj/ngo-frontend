@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { formatDate, formatDateTime } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -285,8 +286,8 @@ export default function FleetPage() {
                         <TableCell>
                           <Badge variant={statusBadgeVariant(r.status)}>{String(r.status).toUpperCase()}</Badge>
                         </TableCell>
-                        <TableCell>{r.start_time?.replace('T', ' ') || '-'}</TableCell>
-                        <TableCell>{r.end_time?.replace('T', ' ') || '-'}</TableCell>
+                        <TableCell>{formatDateTime(r.start_time)}</TableCell>
+                        <TableCell>{formatDateTime(r.end_time)}</TableCell>
                         {isFleetApprover && (
                           <TableCell className="text-right">
                             {r.status === 'pending' ? (
